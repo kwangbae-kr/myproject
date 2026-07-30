@@ -7,53 +7,85 @@ import plotly.express as px
 import streamlit as st
 
 # ==========================================
-# 1. 페이지 설정 및 디자인 적용
+# 1. 페이지 설정 및 디자인(CSS) 적용
 # ==========================================
 st.set_page_config(
-    page_title="대한민국 시군구별 미래 인구 예측 지도",
-    page_icon="📈",
+    page_title="대한민국 시군구별 미래 인구 & 고령화 예측",
+    page_icon="🗺️",
     layout="wide",
 )
 
+# 세련된 UI를 위한 커스텀 CSS 스타일링
 st.markdown(
     """
     <style>
-    .main {
-        background-color: #f8f9fa;
-    }
-    .stDataFrame {
-        border-radius: 10px;
-    }
+        /* 전체 배경 및 폰트 느낌 조정 */
+        .main {
+            background-color: #f4f6f9;
+        }
+        /* 상단 타이틀 카드 스타일 */
+        .header-container {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header-subtitle {
+            font-size: 15px;
+            opacity: 0.9;
+        }
+        /* 데이터프레임 스타일 */
+        .stDataFrame {
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        /* 사이드바 스타일링 */
+        [data-testid="stSidebar"] {
+            background-color: #ffffff;
+            border-right: 1px solid #eaeaea;
+        }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-# 사이드바 안내
+# 사이드바 꾸미기
 with st.sidebar:
-    st.markdown("### 🗺️ 대시보드 안내")
+    st.markdown("### 🧭 대시보드 안내")
     st.markdown(
-        "이 앱은 최신 행정안전부 연령별 인구 데이터를 바탕으로 **코호트 이동 방식**을 적용하여 **10년 뒤 대한민국 시군구별 인구 구조 변화와 고령화율**을 예측합니다."
+        "본 앱은 최신 행정안전부 연령별 인구 데이터를 바탕으로 **코호트 이동 방식**을 적용하여 **10년 뒤 대한민국 시군구별 인구 구조 변화와 고령화율**을 시각화합니다."
     )
     st.markdown("---")
-    st.markdown("📌 **고령화 단계 구간 기준**")
+    st.markdown("🔥 **고령화 단계별 색상 및 구간**")
     st.markdown(
         """
-    - 🔵 **19% 미만** (옅은 파랑)
-    - 🔵 **19% ~ 23%**
-    - 🔵 **23% ~ 28%**
-    - 🔵 **28% ~ 38%**
-    - 🔵 **38% 이상** (진한 파랑)
+    - 🟨 **19% 미만** (안정)
+    - 🟧 **19% ~ 23%** (주의)
+    - 🟥 **23% ~ 28%** (경계)
+    - 🟫 **28% ~ 38%** (심각)
+    - ⬛ **38% 이상** (초고위험)
     """
     )
     st.markdown("---")
-    st.caption("개발: 고령화 및 미래 인구 시각화 대시보드")
+    st.caption("Designed for Advanced Informatics Education")
 
-st.title("📈 대한민국 시군구별 10년 후 미래 인구 및 세대별 예측 지도")
+# 상단 배너 헤더
 st.markdown(
-    "마우스를 올리면 **모든 연령대별(10년 단위 세대)** 현재 인구와 10년 후 미래 예상 인구수를 상세히 비교하여 확인할 수 있습니다."
+    """
+    <div class="header-container">
+        <div class="header-title">🗺️ 대한민국 시군구별 10년 후 미래 인구 & 고령화 예측 대시보드</div>
+        <div class="header-subtitle">지역별 세대 변화와 고령화 심화 단계를 직관적으로 탐색하고 비교해보세요.</div>
+    </div>
+""",
+    unsafe_allow_html=True,
 )
-st.markdown("---")
 
 
 # ==========================================
@@ -202,7 +234,6 @@ def load_and_forecast_data():
             "고령화구간": category,
         }
 
-        # 풀어서 키 이름 지정 (축약어 지양)
         for k in curr_gen:
             item[f"현재_{k}"] = curr_gen[k]
             item[f"미래_{k}"] = fut_gen[k]
@@ -222,10 +253,13 @@ with st.spinner("데이터 분석 및 세대별 미래 인구 예측을 진행 �
 
 
 # ==========================================
-# 3. Plotly 지도 시각화
+# 3. Plotly 지도 시각화 (개선된 컬러 맵 적용)
 # ==========================================
-st.subheader(
-    f"📌 [{target_year}년 예측] 시군구별 고령화율 단계구분도 & 세대별 인구 분포"
+st.markdown(
+    f"### 📍 [{target_year}년 예측] 시군구별 고령화율 단계구분도 & 세대별 인구 분포"
+)
+st.markdown(
+    "지도에 마우스를 올리면 해당 지역의 **현재 vs 10년 후 세대별 인구 상세 비교 정보**가 표시됩니다."
 )
 
 category_orders = {
@@ -276,19 +310,22 @@ for g in gen_keys:
     hover_dict[f"현재_{g}"] = True
     hover_dict[f"미래_{g}"] = True
 
+# 세련된 주황-레드 계열 컬러 팔레트 적용 (OrRd 또는 커스텀)
+color_discrete_map = {
+    "19% 미만": "#fee8c8",  # 연한 살구색
+    "19% ~ 23%": "#fdbb84",  # 주황빛
+    "23% ~ 28%": "#fc8d59",  # 진한 주황
+    "28% ~ 38%": "#e34a33",  # 다크 레드
+    "38% 이상": "#b30000",  # 검붉은색
+}
+
 fig = px.choropleth(
     map_data,
     geojson=sigungu_geojson,
     locations="시군구코드",
     featureidkey="properties.코드",
     color="고령화구간",
-    color_discrete_map={
-        "19% 미만": "#deebf7",
-        "19% ~ 23%": "#9ecae1",
-        "23% ~ 28%": "#4292c6",
-        "28% ~ 38%": "#2171b5",
-        "38% 이상": "#08306b",
-    },
+    color_discrete_map=color_discrete_map,
     category_orders=category_orders,
     hover_name="시군구",
     hover_data=hover_dict,
@@ -296,9 +333,11 @@ fig = px.choropleth(
 
 fig.update_geos(fitbounds="locations", visible=False)
 fig.update_layout(
-    margin={"r": 0, "t": 0, "l": 0, "b": 0},
-    legend_title=f"{target_year}년 고령화구간",
+    margin={"r": 0, "t": 10, "l": 0, "b": 0},
+    legend_title=f"{target_year}년 고령화 심각도",
     height=650,
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
 )
 
 st.plotly_chart(fig, use_container_width=True)
@@ -308,8 +347,8 @@ st.plotly_chart(fig, use_container_width=True)
 # 4. 상하위 10개 지역 표 출력
 # ==========================================
 st.markdown("---")
-st.subheader(
-    f"📊 {target_year}년 예측 고령화율 주요 지역 순위 및 10년 후 세대별 인구"
+st.markdown(
+    f"### 🏆 {target_year}년 예측 고령화율 주요 지역 순위 및 세대별 인구 분포"
 )
 
 sorted_pop = sorted(
@@ -343,11 +382,15 @@ def format_table_data(data_list):
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown(f"#### 🔴 10년 후 고령화율 높은 곳 상위 10개 지역")
+    st.markdown(
+        "#### 🚨 10년 후 고령화율이 가장 높은 지역 (상위 10개 지역)"
+    )
     st.dataframe(format_table_data(top_10_data), use_container_width=True)
 
 with col2:
-    st.markdown(f"#### 🔵 10년 후 고령화율 낮은 곳 하위 10개 지역")
+    st.markdown(
+        "#### 🛡️ 10년 후 고령화율이 가장 낮은 지역 (하위 10개 지역)"
+    )
     st.dataframe(
         format_table_data(bottom_10_data), use_container_width=True
     )
